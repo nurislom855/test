@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tashkiliy Xulq — Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d2e;
+    --card2: #1e2235;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --border: #2a2d45;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  header {
+    text-align: center;
+    padding: 30px 20px 10px;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  header h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6c63ff, #ff6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  #progress-bar-wrap {
+    width: 100%;
+    max-width: 700px;
+    margin: 16px 0 8px;
+    background: var(--border);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  #progress-label {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  #question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+
+  #q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  #q-num {
+    background: linear-gradient(135deg, #6c63ff33, #ff658422);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  #score-badge {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  #question-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    color: #f0f4ff;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    background: var(--card2);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #22265a;
+    transform: translateX(4px);
+  }
+
+  .option-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s;
+  }
+
+  .option-btn.correct {
+    border-color: var(--green);
+    background: #14532d44;
+    animation: popIn 0.3s ease;
+  }
+  .option-btn.correct .option-label { background: var(--green); color: #fff; }
+
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: #7f1d1d44;
+    animation: shake 0.4s ease;
+  }
+  .option-btn.wrong .option-label { background: var(--red); color: #fff; }
+
+  .option-btn.reveal-correct {
+    border-color: var(--green);
+    background: #14532d22;
+    opacity: 0.85;
+  }
+  .option-btn.reveal-correct .option-label { background: var(--green); color: #fff; }
+
+  .option-btn:disabled { cursor: default; }
+
+  @keyframes popIn {
+    0% { transform: scale(0.97); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  #feedback-msg {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 10px;
+    margin-top: 6px;
+    min-height: 36px;
+    transition: opacity 0.2s;
+  }
+
+  #feedback-msg.correct { color: var(--green); }
+  #feedback-msg.wrong { color: var(--red); }
+
+  #next-btn {
+    display: none;
+    margin: 16px auto 0;
+    padding: 13px 40px;
+    background: linear-gradient(135deg, var(--accent), #9b59f5);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px #6c63ff44;
+  }
+
+  #next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px #6c63ff66; }
+
+  /* Results Screen */
+  #results-screen {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 28px;
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+
+  #results-screen h2 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .score-circle {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) 0%, transparent 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    position: relative;
+  }
+
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--card);
+  }
+
+  .score-num {
+    position: relative;
+    z-index: 1;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .result-details {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 16px 0 24px;
+    flex-wrap: wrap;
+  }
+
+  .result-item {
+    text-align: center;
+  }
+  .result-item .num { font-size: 1.6rem; font-weight: 900; }
+  .result-item .lbl { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .result-item .num.g { color: var(--green); }
+  .result-item .num.r { color: var(--red); }
+  .result-item .num.a { color: var(--accent); }
+
+  .result-emoji { font-size: 3rem; margin-bottom: 8px; }
+
+  #continue-btn, #restart-btn {
+    padding: 13px 36px;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    margin: 6px;
+    transition: transform 0.15s;
+  }
+
+  #continue-btn {
+    background: linear-gradient(135deg, var(--accent), #9b59f5);
+    color: #fff;
+    box-shadow: 0 4px 20px #6c63ff44;
+  }
+
+  #restart-btn {
+    background: var(--card2);
+    color: var(--text);
+    border: 2px solid var(--border);
+  }
+
+  #continue-btn:hover, #restart-btn:hover { transform: translateY(-2px); }
+
+  #start-screen {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 28px;
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+
+  #start-screen h2 {
+    font-size: 1.6rem;
+    font-weight: 900;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  #start-screen p { color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+
+  .stat-grid {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 24px;
+    min-width: 110px;
+  }
+
+  .stat-box .n { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+  .stat-box .l { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+
+  #start-btn {
+    padding: 14px 48px;
+    background: linear-gradient(135deg, var(--accent), #9b59f5);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 24px #6c63ff55;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-top: 8px;
+  }
+
+  #start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 32px #6c63ff77; }
+
+  .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .badge {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Tashkiliy Xulq</h1>
+  <p>Fanidan test — 209 ta savol</p>
+</header>
+
+<!-- Start Screen -->
+<div id="start-screen">
+  <div style="font-size:3rem;margin-bottom:12px">🎯</div>
+  <h2>Testga Tayyor bo'lasizmi?</h2>
+  <p>Savollar 25 tadan guruhlarga bo'linadi.<br>Har bir guruh tugagach natijalar ko'rsatiladi.<br>Variantlar har safar aralashtirilib beriladi.</p>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="n">209</div><div class="l">Savollar</div></div>
+    <div class="stat-box"><div class="n">25</div><div class="l">Blok hajmi</div></div>
+    <div class="stat-box"><div class="n">4</div><div class="l">Variantlar</div></div>
+  </div>
+  <div class="badge-row">
+    <span class="badge">✅ Darhol tekshiriladi</span>
+    <span class="badge">🔀 Aralashtirilib beriladi</span>
+    <span class="badge">📊 Natijalar</span>
+  </div>
+  <br>
+  <button id="start-btn" onclick="startQuiz()">Boshlash →</button>
+</div>
+
+<!-- Quiz Screen -->
+<div id="quiz-screen" style="display:none;width:100%;max-width:700px;">
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+  <div id="progress-label">
+    <span id="prog-left">Savol 1 / 25</span>
+    <span id="prog-right">Blok 1 / 9</span>
+  </div>
+
+  <div id="question-card">
+    <div id="q-meta">
+      <div id="q-num">Savol #1</div>
+      <div id="score-badge">✅ 0 &nbsp; ❌ 0</div>
+    </div>
+    <div id="question-text">...</div>
+    <div id="options-wrap"></div>
+    <div id="feedback-msg"></div>
+    <div style="text-align:center">
+      <button id="next-btn" onclick="nextQuestion()">Keyingisi →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Results Screen -->
+<div id="results-screen">
+  <div class="result-emoji" id="res-emoji">🎉</div>
+  <h2 id="res-title">Blok yakunlandi!</h2>
+  <div class="score-circle" id="score-circle">
+    <div class="score-num" id="score-pct">0%</div>
+  </div>
+  <div class="result-details">
+    <div class="result-item"><div class="num g" id="r-correct">0</div><div class="lbl">To'g'ri</div></div>
+    <div class="result-item"><div class="num r" id="r-wrong">0</div><div class="lbl">Noto'g'ri</div></div>
+    <div class="result-item"><div class="num a" id="r-total">0</div><div class="lbl">Jami</div></div>
+  </div>
+  <p id="res-msg" style="color:var(--muted);margin-bottom:20px;font-size:0.95rem;line-height:1.6"></p>
+  <div>
+    <button id="continue-btn" onclick="continueQuiz()">Davom etish →</button>
+    <button id="restart-btn" onclick="restartQuiz()">🔄 Qayta boshlash</button>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"q":"Tashkiliy xulq fani nimani o'rganadi?","options":["Tashkilotlarda insonlarning xulq-atvorini","Faqat texnologik jarayonlarini","Bozor mexanizmlarini","Moliyaviy hisobotlarni"],"correct":0},{"q":"Tashkiliy xulq fanining asosiy maqsadi nima?","options":["Inson xulqi orqali tashkilot samaradorligini oshirish","Faqat intizomni kuchaytirish","Xarajatlarni kamaytirish","Daromadni nazorat qilish"],"correct":0},{"q":"Tashkiliy xulq qaysi fanlar bilan uzviy bog'liq?","options":["Psixologiya, sotsiologiya va menejment","Faqat iqtisodiyot","Faqat huquq","Faqat statistika"],"correct":0},{"q":"Tashkiliy xulq qaysi darajalarda o'rganiladi?","options":["Individual, guruh va tashkiliy darajada","Faqat individual darajada","Faqat guruh darajasida","Faqat rahbariyat darajasida"],"correct":0},{"q":"Individual xulq deganda nimani tushunamiz?","options":["Alohida xodimning ishdagi xulq-atvorini","Jamoaning umumiy qarorini","Tashkilot siyosatini","Rahbar strategiyasini"],"correct":0},{"q":"Guruh xulqi nimani ifodalaydi?","options":["Xodimlarning jamoada o'zaro munosabatlarini","Texnik vositalar ishini","Ish haqi tizimini","Moliyaviy nazoratni"],"correct":0},{"q":"Guruh xulqi nimani ifodalaydi?","options":["Xodimlarning jamoada o'zaro munosabatlarini","Ish haqi tizimini","Texnik vositalar ishini","Moliyaviy nazoratni"],"correct":0},{"q":"Tashkiliy xulq fanining tadqiqot obyekti nima?","options":["Inson va guruhlarning tashkilotdagi faoliyati","Ishlab chiqarish uskunalari","Bino va infratuzilma","Bozor narxlari"],"correct":0},{"q":"Xodimlarning ishga bo'lgan munosabati qaysi tushuncha bilan ifodalanadi?","options":["Mehnatga munosabat","Ishlab chiqarish hajmi","Bozor ulushi","Tashkiliy tuzilma"],"correct":0},{"q":"Tashkiliy xulq fanining amaliy ahamiyati nimada?","options":["Boshqaruv qarorlarini samaraliroq qabul qilishda","Hisobotlarni ko'paytirishda","Texnikani almashtirishda","Narxlarni belgilashda"],"correct":0},{"q":"Tashkiliy xulq fani menejerlarga nima beradi?","options":["Xodimlarni tushunish va samarali boshqarish imkonini","Faqat buyruq berish huquqini","Moliyaviy audit ko'nikmasini","Texnik nazoratni"],"correct":0},{"q":"Inson omili tashkilot faoliyatida nima sababli muhim?","options":["Natijalar bevosita inson xulqiga bog'liq bo'lgani uchun","Faqat texnika muhim bo'lgani uchun","Bozor talabini belgilagani uchun","Soliq tizimi bilan bog'liq bo'lgani uchun"],"correct":0},{"q":"Tashkiliy xulqda motivatsiya nimani anglatadi?","options":["Xodimni faol ishlashga undovchi ichki va tashqi omillarni","Jazolash tizimini","Ish vaqtini qisqartirishni","Texnik jarayonni"],"correct":0},{"q":"Tashkilot ichidagi munosabatlar asosan nimaga ta'sir qiladi?","options":["Ish samaradorligi va jamoa muhitiga","Bozor narxlariga","Soliq stavkalariga","Valyuta kursiga"],"correct":0},{"q":"Tashkiliy xulq fanining asosiy vazifalaridan biri qaysi?","options":["Xodimlar xulqini tahlil qilish va bashoratlash","Faqat buyruqlar ishlab chiqish","Moliyaviy nazorat","Texnik rejalashtirish"],"correct":0},{"q":"Zamonaviy tashkilotlarda tashkiliy xulq nima uchun zarur?","options":["Inson resurslarini samarali boshqarish uchun","Faqat hujjatlar sonini oshirish uchun","Tashkilotni murakkablashtirish uchun","Texnik jarayonlarni sekinlashtirish uchun"],"correct":0},{"q":"Tashkilotda insonning o'rni nimasi bilan belgilanadi?","options":["Uning xulqi, bilim va ko'nikmalari bilan","Faqat lavozimi bilan","Faqat ish staji bilan","Faqat maoshi bilan"],"correct":0},{"q":"Inson va tashkilot o'rtasidagi munosabat nimaga asoslanadi?","options":["O'zaro manfaat va hamkorlikka","Faqat buyruq va bo'ysunishga","Faqat hujjatlarga","Faqat tashqi nazoratga"],"correct":0},{"q":"Tashkilot insondan nimani kutadi?","options":["Samarali mehnat va mas'uliyatli xulqni","Faqat itoatkorlikni","Faqat tashabbussiz ishlashni","Faqat vaqtida kelishni"],"correct":0},{"q":"Inson tashkilotdan nimani kutadi?","options":["Mehnatiga mos rag'bat va rivojlanish imkonini","Faqat qat'iy nazoratni","Faqat majburiyatlarni","Faqat hisobotlarni"],"correct":0},{"q":"Inson va tashkilot o'rtasidagi muvozanat buzilsa nima yuz beradi?","options":["Ish samaradorligi pasayadi","Tashkilot avtomatik rivojlanadi","Texnologiya yaxshilanadi","Bozor kengayadi"],"correct":0},{"q":"Insonning tashkilotga moslashuvi qanday jarayon hisoblanadi?","options":["Ijtimoiylashuv jarayoni","Texnik sozlash jarayoni","Moliyaviy tahlil","Strategik rejalashtirish"],"correct":0},{"q":"Tashkilot madaniyati insonga qanday ta'sir ko'rsatadi?","options":["Uning xulqi va munosabatlarini shakllantiradi","Faqat ish vaqtini belgilaydi","Faqat ish haqi miqdorini belgilaydi","Faqat lavozimni aniqlaydi"],"correct":0},{"q":"Inson ehtiyojlari tashkilot faoliyatiga qanday ta'sir qiladi?","options":["Motivatsiya va ish natijalariga ta'sir qiladi","Faqat hujjat aylanishiga ta'sir qiladi","Faqat tashqi muhitga ta'sir qiladi","Faqat texnik jarayonga ta'sir qiladi"],"correct":0},{"q":"Tashkilot inson xulqini boshqarishda nimadan foydalanadi?","options":["Rag'batlantirish va motivatsiya tizimidan","Faqat jazolashdan","Faqat buyruqlardan","Faqat nazoratdan"],"correct":0},{"q":"Insonning tashkilotga sodiqligi nimaga bog'liq?","options":["Qoniqish va adolatli munosabatga","Faqat lavozim nomiga","Faqat ish vaqtiga","Faqat tashqi omillarga"],"correct":0},{"q":"Tashkilotda inson resurslari nima sifatida qaraladi?","options":["Asosiy strategik resurs sifatida","Ikkinchi darajali omil sifatida","Ortiqcha xarajat sifatida","Texnik vosita sifatida"],"correct":0},{"q":"Inson xulqini tushunish menejerga nima beradi?","options":["To'g'ri va samarali qaror qabul qilish imkonini","Faqat buyruq berish imkonini","Faqat nazorat qilishni","Faqat hisobot tuzishni"],"correct":0},{"q":"Tashkilotda shaxsiy manfaat va umumiy maqsad uyg'unlashsa nima bo'ladi?","options":["Tashkilot samaradorligi oshadi","Qarama-qarshilik kuchayadi","Ish sekinlashadi","Intizom susayadi"],"correct":0},{"q":"Insonning ishga munosabati nimaga ta'sir qiladi?","options":["Mehnat unumdorligi va ish sifatiga","Faqat hujjatlar soniga","Faqat texnik vositalarga","Faqat tashqi muhitga"],"correct":0},{"q":"Zamonaviy boshqaruvda \"inson markazda\" yondashuvi nimani anglatadi?","options":["Inson omilini asosiy ustuvorlik sifatida ko'rishni","Faqat texnologiyaga tayanishni","Faqat qat'iy nazoratni","Faqat moliyaviy natijalarni"],"correct":0},{"q":"Tashkilot madaniyati deganda nimani tushunamiz?","options":["Tashkilotda shakllangan qadriyatlar, me'yorlar va xulq qoidalarini","Faqat ichki hujjatlar majmuasini","Faqat rahbar buyruqlarini","Faqat tashqi muhit ta'sirini"],"correct":0},{"q":"Tashkilot madaniyatining asosiy vazifasi nima?","options":["Xodimlar xulqini yo'naltirish va birlashtirish","Faqat nazoratni kuchaytirish","Faqat moliyaviy hisobot yuritish","Faqat texnik jarayonlarni boshqarish"],"correct":0},{"q":"Tashkilot madaniyati qaysi elementlardan iborat?","options":["Qadriyatlar, an'analar va me'yorlardan","Faqat ish tartibidan","Faqat lavozim yo'riqnomalaridan","Faqat tashqi belgilaridan"],"correct":0},{"q":"Kuchli tashkilot madaniyati nimaga olib keladi?","options":["Jamoa birdamligi va samaradorlik oshishiga","Qarama-qarshilik kuchayishiga","Intizomning pasayishiga","Nazoratning yo'qolishiga"],"correct":0},{"q":"Tashkilot axloqi nimani ifodalaydi?","options":["Tashkilotda qabul qilingan axloqiy me'yor va tamoyillarni","Faqat qonuniy talablarni","Faqat shaxsiy qarashlarni","Faqat tashqi bosimni"],"correct":0},{"q":"Axloqiy me'yorlar tashkilot faoliyatiga qanday ta'sir qiladi?","options":["Xodimlar xulqi va qarorlariga yo'nalish beradi","Faqat texnik jarayonlarga ta'sir qiladi","Faqat moliyaviy ko'rsatkichlarga ta'sir qiladi","Faqat tashqi muhitga ta'sir qiladi"],"correct":0},{"q":"Rahbarning shaxsiy namunasi tashkilot madaniyatida qanday rol o'ynaydi?","options":["Madaniyat va axloqiy muhitni shakllantiradi","Faqat rasmiy tartibni belgilaydi","Faqat ish vaqtini nazorat qiladi","Faqat hujjatlarni imzolaydi"],"correct":0},{"q":"Tashkilot madaniyatining ko'rinadigan belgilariga nimalar kiradi?","options":["Ramzlar, urf-odatlar va marosimlar","Faqat moliyaviy hisobotlar","Faqat ishlab chiqarish rejasi","Faqat texnik vositalar"],"correct":0},{"q":"Tashkilot axloqining xodimlarga ta'siri nimada namoyon bo'ladi?","options":["Halollik, mas'uliyat va ishonchni shakllantirishda","Faqat ish tezligini oshirishda","Faqat buyruqlarga bo'ysunishda","Faqat hisobot topshirishda"],"correct":0},{"q":"Axloqiy muhit sog'lom bo'lgan tashkilotda qanday holat kuzatiladi?","options":["O'zaro ishonch va ochiq muloqot kuchayadi","Qarama-qarshilik kuchayadi","Nazorat keskinlashadi","Intizom susayadi"],"correct":0},{"q":"Tashkilot madaniyati strategiya bilan qanday bog'liq?","options":["Strategiyani amalga oshirishni qo'llab-quvvatlaydi","Strategiyaga umuman ta'sir qilmaydi","Strategiyani cheklaydi","Strategiyani bekor qiladi"],"correct":0},{"q":"Axloqiy me'yorlarga rioya qilmaslik nimaga olib keladi?","options":["Tashkilot obro'sining pasayishiga","Samaradorlik oshishiga","Texnologiya rivojiga","Moliyaviy barqarorlikka"],"correct":0},{"q":"Tashkilot madaniyatini shakllantirishda nimalar muhim?","options":["Qadriyatlar, rahbarlik uslubi va kommunikatsiya","Faqat nazorat tizimi","Faqat moliyaviy rag'bat","Faqat texnik infratuzilma"],"correct":0},{"q":"Axloqiy tamoyillarga amal qilish menejerga nima beradi?","options":["Ishonchli va barqaror jamoani shakllantirish imkonini","Faqat buyruq berish imkonini","Faqat nazoratni kuchaytirishni","Faqat hisobotlarni ko'paytirishni"],"correct":0},{"q":"Zamonaviy tashkilotlarda madaniyat va axloq nima uchun muhim?","options":["Barqaror rivojlanish va ijobiy imijni ta'minlash uchun","Faqat hujjatlar sonini oshirish uchun","Faqat tashqi talablarni bajarish uchun","Faqat texnik jarayonlarni boshqarish uchun"],"correct":0},{"q":"Tashkiliy o'zgarishlar deganda nimani tushunamiz?","options":["Tashkilot faoliyatini takomillashtirishga qaratilgan tizimli o'zgarishlarni","Faqat tashqi bosimni","Faqat texnik almashtirishni","Faqat lavozimlarni qisqartirishni"],"correct":0},{"q":"Innovatsion o'zgarishlarning asosiy maqsadi nima?","options":["Tashkilot raqobatbardoshligini oshirish","Faqat xarajatlarni ko'paytirish","Faqat ish hajmini kamaytirish","Faqat nazoratni kuchaytirish"],"correct":0},{"q":"O'zgarishlar jarayonida xodimlar xatti-harakati nimaga ta'sir qiladi?","options":["O'zgarishlarning muvaffaqiyatli amalga oshishiga","Faqat hujjat aylanishiga","Faqat tashqi muhitga","Faqat texnik vositalarga"],"correct":0},{"q":"Innovatsion muhit tashkilot xodimlarida nimani shakllantiradi?","options":["Yangi g'oyalarga ochiqlik va moslashuvchanlikni","Faqat qat'iy intizomni","Faqat buyruqqa bo'ysunishni","Faqat rasmiylikni"],"correct":0},{"q":"O'zgarishlarga qarshilikning asosiy sababi nima?","options":["Noaniqlik va xavotir hissi","Texnologiya yetishmasligi","Bozor talabi","Moliyaviy hisob-kitob"],"correct":0},{"q":"Tashkiliy o'zgarishlarni boshqarishda rahbarning vazifasi nima?","options":["Xodimlarni qo'llab-quvvatlash va yo'naltirish","Faqat buyruq berish","Faqat nazorat qilish","Faqat hisobot talab qilish"],"correct":0},{"q":"Innovatsiyalarni joriy etishda kommunikatsiyaning roli nimada?","options":["O'zgarishlar mohiyatini tushuntirish va ishonchni oshirishda","Faqat hujjatlarni yetkazishda","Faqat hisobot berishda","Faqat texnik jarayonda"],"correct":0},{"q":"Moslashuvchan tashkiliy xulq nimani anglatadi?","options":["Xodimlarning o'zgarishlarga tez moslasha olishini","Faqat qat'iy qoidalarga amal qilishni","Faqat nazoratni kuchaytirishni","Faqat texnik ko'rsatmalarni"],"correct":0},{"q":"O'zgarishlar davrida motivatsiya qanday rol o'ynaydi?","options":["Xodimlarning faolligi va qo'llab-quvvatlashini ta'minlaydi","Faqat jazolashni kuchaytiradi","Faqat intizomni pasaytiradi","Faqat tashqi bosimni oshiradi"],"correct":0},{"q":"Innovatsion o'zgarishlar tashkiliy madaniyatga qanday ta'sir qiladi?","options":["Ochiqlik va yangilikka intilishni kuchaytiradi","Madaniyatni o'zgartirmaydi","Qarama-qarshilikni kuchaytiradi","Intizomni susaytiradi"],"correct":0},{"q":"O'zgarishlarni muvaffaqiyatli amalga oshirish nimaga bog'liq?","options":["Inson omilini hisobga olishga","Faqat texnik resurslarga","Faqat moliyaviy mablag'ga","Faqat tashqi muhitga"],"correct":0},{"q":"Innovatsion jarayonda jamoaviy ish nima uchun muhim?","options":["G'oyalarni birgalikda ishlab chiqish va qo'llash uchun","Faqat ish hajmini oshirish uchun","Faqat javobgarlikni kamaytirish uchun","Faqat nazoratni kuchaytirish uchun"],"correct":0},{"q":"O'zgarishlar sharoitida yetakchilikning asosiy xususiyati qaysi?","options":["Ilhomlantirish va ishonch uyg'otish","Faqat qat'iy buyruqlar berish","Faqat nazoratni kuchaytirish","Faqat rasmiy munosabat"],"correct":0},{"q":"Innovatsion o'zgarishlarga mos tashkiliy xulq nimaga olib keladi?","options":["Barqaror rivojlanish va samaradorlikka","Qarama-qarshilik kuchayishiga","Intizom pasayishiga","Nazoratning susayishiga"],"correct":0},{"q":"Zamonaviy tashkilotlarda innovatsion o'zgarishlar nima uchun zarur?","options":["Tez o'zgarayotgan muhitda raqobatda ustun bo'lish uchun","Faqat ichki tartibni murakkablashtirish uchun","Faqat xodimlarni almashtirish uchun","Faqat hujjatlar sonini oshirish uchun"],"correct":0},{"q":"Tashkilotdagi muloqot odob-axloq qoidalari nimani ifodalaydi?","options":["Xodimlar o'rtasida muloqotda amal qilinadigan axloqiy me'yorlarni","Faqat rasmiy hujjatlar tartibini","Faqat rahbar buyruqlarini","Faqat tashqi aloqa shakllarini"],"correct":0},{"q":"Muloqot odob-axloq qoidalarining asosiy maqsadi nima?","options":["O'zaro hurmat va samarali hamkorlikni ta'minlash","Faqat nazoratni kuchaytirish","Faqat intizomni qat'iylashtirish","Faqat hujjat almashuvini oshirish"],"correct":0},{"q":"Tashkilotda to'g'ri muloqot nimaga xizmat qiladi?","options":["Ish samaradorligi va ijobiy muhitni shakllantirishga","Qarama-qarshilikni kuchaytirishga","Nazoratni susaytirishga","Intizomni pasaytirishga"],"correct":0},{"q":"Muloqot jarayonida hurmat nimada namoyon bo'ladi?","options":["Suhbatdosh fikrini tinglash va e'tirof etishda","Faqat buyruq berishda","Faqat tanqid qilishda","Faqat rasmiy ohangda"],"correct":0},{"q":"Tashkilotdagi muloqotda ochiqlik nimani anglatadi?","options":["Axborotni aniq va tushunarli yetkazishni","Faqat shaxsiy fikrni bildirishni","Faqat rasmiy yozishmalarni","Faqat buyruqlarni"],"correct":0},{"q":"Axloqiy muloqot qoidalariga rioya qilmaslik nimaga olib keladi?","options":["Nizo va tushunmovchiliklarning kuchayishiga","Samaradorlik oshishiga","Jamoa birlashishiga","Motivatsiya kuchayishiga"],"correct":0},{"q":"Tashkilotda vertikal muloqot nimani anglatadi?","options":["Rahbar va xodimlar o'rtasidagi muloqotni","Faqat xodimlar o'rtasidagi suhbatni","Faqat tashqi aloqani","Faqat norasmiy muloqotni"],"correct":0},{"q":"Gorizontal muloqotning asosiy vazifasi nima?","options":["Xodimlar o'rtasida hamkorlikni kuchaytirish","Faqat nazoratni ta'minlash","Faqat hisobot topshirish","Faqat buyruq uzatish"],"correct":0},{"q":"Tashkilotda muloqot madaniyati nimaga bog'liq?","options":["Umumiy qadriyatlar va axloqiy me'yorlarga","Faqat lavozim darajasiga","Faqat ish stajiga","Faqat tashqi muhitga"],"correct":0},{"q":"Tinglash madaniyati muloqotda nima uchun muhim?","options":["Qarama-qarshiliklarni kamaytirish va tushunishni oshirish uchun","Faqat suhbatni cho'zish uchun","Faqat rasmiylikni saqlash uchun","Faqat tanqid qilish uchun"],"correct":0},{"q":"Tashkilotda elektron muloqotda axloq qoidalari nimani talab qiladi?","options":["Aniqlik, hurmat va rasmiylikni saqlashni","Faqat tezkorlikni","Faqat qisqa yozishni","Faqat norasmiy uslubni"],"correct":0},{"q":"Muloqotda konstruktiv fikr bildirish nimani anglatadi?","options":["Tanqidni hurmat va yechim taklifi bilan bildirishni","Faqat salbiy fikr aytishni","Faqat sukut saqlashni","Faqat buyruq berishni"],"correct":0},{"q":"Muloqot odob-axloq qoidalariga amal qilish rahbarga nima beradi?","options":["Jamoada ishonch va hurmatni mustahkamlash imkonini","Faqat nazoratni kuchaytirish imkonini","Faqat buyruq berish huquqini","Faqat rasmiy mavqeni"],"correct":0},{"q":"Tashkilotdagi sog'lom muloqot muhiti nimaga olib keladi?","options":["Jamoaviy hamkorlik va yuqori natijalarga","Qarama-qarshilik kuchayishiga","Intizom pasayishiga","Nazorat susayishiga"],"correct":0},{"q":"Zamonaviy tashkilotlarda muloqot odob-axloq qoidalari nima uchun muhim?","options":["Samarali boshqaruv va barqaror rivojlanishni ta'minlash uchun","Faqat rasmiy yozishmalarni ko'paytirish uchun","Faqat tashqi talablarni bajarish uchun","Faqat ichki nazoratni kuchaytirish uchun"],"correct":0},{"q":"Tashkiliy xatti-harakatlar modeli deganda nimani tushunamiz?","options":["Tashkilotda inson xulqini tushuntiruvchi va izohlovchi nazariy yondashuvlarni","Faqat tashkiliy tuzilmani","Faqat boshqaruv buyruqlarini","Faqat texnologik jarayonlarni"],"correct":0},{"q":"Tashkiliy xatti-harakatlar modellari nima uchun zarur?","options":["Xodimlar xulqini tushunish va boshqarishni takomillashtirish uchun","Faqat nazoratni kuchaytirish uchun","Faqat moliyaviy tahlil uchun","Faqat hisobot yuritish uchun"],"correct":0},{"q":"Avtoritar modelning asosiy xususiyati qaysi?","options":["Buyruq va qat'iy nazoratga asoslanishi","Jamoaviy qaror qabul qilinishi","O'zaro ishonch","O'zini-o'zi boshqarish"],"correct":0},{"q":"Vasiylik (custodial) modeli nimaga asoslanadi?","options":["Xodimlarning moddiy xavfsizligini ta'minlashga","Faqat jazolashga","Faqat ijodiy erkinlikka","Faqat o'zini boshqarishga"],"correct":0},{"q":"Qo'llab-quvvatlovchi (supportive) model nimani nazarda tutadi?","options":["Rahbarning xodimlarni rag'batlantirishi va qo'llab-quvvatlashini","Faqat qat'iy intizomni","Faqat buyruqlarni","Faqat nazoratni"],"correct":0},{"q":"O'zini-o'zi boshqarish modeli nimani ifodalaydi?","options":["Xodimlarning mustaqilligi va mas'uliyatini","Qat'iy tashqi nazoratni","Faqat rahbar qarorlarini","Faqat rasmiy tartibni"],"correct":0},{"q":"Qaysi modelda inson markaziy o'ringa qo'yiladi?","options":["Qo'llab-quvvatlovchi modelda","Avtoritar modelda","Texnokratik modelda","Byurokratik modelda"],"correct":0},{"q":"Avtoritar model ko'proq qaysi sharoitda samarali bo'lishi mumkin?","options":["Favqulodda va tezkor qaror talab etiladigan holatda","Innovatsion muhitda","Ijodiy jamoada","Moslashuvchan tashkilotda"],"correct":0},{"q":"Vasiylik modelining asosiy kamchiligi nimada?","options":["Xodimlarda passivlik shakllanishi mumkin","Samaradorlik keskin oshadi","Ijodkorlik kuchayadi","Mas'uliyat ortadi"],"correct":0},{"q":"Kollektiv model qaysi natijani kuchaytiradi?","options":["Jamoaviy mas'uliyat va sodiqlikni","Qat'iy bo'ysunishni","Shaxsiy raqobatni","Passivlikni"],"correct":0},{"q":"Tashkiliy xatti-harakatlar modellari nimaga bog'liq holda tanlanadi?","options":["Tashkilot maqsadi, madaniyati va xodimlar xususiyatiga","Faqat moliyaviy holatga","Faqat tashqi muhitga","Faqat rahbar xohishiga"],"correct":0},{"q":"Zamonaviy tashkilotlarda qaysi model ko'proq ustunlik qiladi?","options":["Qo'llab-quvvatlovchi va kollektiv model","Avtoritar model","Faqat vasiylik modeli","Byurokratik model"],"correct":0},{"q":"Tashkiliy xatti-harakatlar modellarini bilish menejerga nima beradi?","options":["Turli vaziyatlarda to'g'ri boshqaruv usulini tanlash imkonini","Faqat nazoratni kuchaytirish imkonini","Faqat buyruq berish huquqini","Faqat rasmiy mavqeni"],"correct":0},{"q":"Motivatsiya tushunchasi nimani anglatadi?","options":["Insonni ma'lum maqsad sari harakatlantiruvchi ichki va tashqi omillarni","Faqat ish haqi miqdorini","Faqat jazolash tizimini","Faqat buyruqlarni"],"correct":0},{"q":"Tashkiliy xatti-harakatlarda motivatsiyaning asosiy vazifasi nima?","options":["Xodimlarning faolligi va samaradorligini oshirish","Faqat nazoratni kuchaytirish","Faqat intizomni ta'minlash","Faqat hisobotlarni ko'paytirish"],"correct":0},{"q":"Ichki motivatsiya nimaga asoslanadi?","options":["Qiziqish, ehtiyoj va shaxsiy qoniqishga","Faqat moddiy mukofotga","Faqat jazoga","Faqat tashqi bosimga"],"correct":0},{"q":"Tashqi motivatsiya nimani ifodalaydi?","options":["Mukofot, maosh va rag'batlantirish kabi omillarni","Shaxsiy qadriyatlarni","Ichki qiziqishni","Kasbiy ehtirosni"],"correct":0},{"q":"Motivatsiya darajasi nimaga bevosita ta'sir qiladi?","options":["Mehnat unumdorligi va ish natijalariga","Faqat hujjat aylanishiga","Faqat texnik jarayonga","Faqat tashqi muhitga"],"correct":0},{"q":"Ehtiyojlar nazariyalari nimani tushuntiradi?","options":["Inson xulqining asosida yotgan ehtiyojlarni","Faqat ish haqi tizimini","Faqat tashkiliy tuzilmani","Faqat nazorat mexanizmini"],"correct":0},{"q":"Rag'batlantirish tizimi nimaga xizmat qiladi?","options":["Xodimlarni yuqori natijalarga undashga","Faqat jazolashga","Faqat nazorat qilishga","Faqat intizomni saqlashga"],"correct":0},{"q":"Moddiy rag'batlantirishga qaysilar kiradi?","options":["Maosh, bonus va mukofotlar","Maqtov va e'tirof","Kasbiy o'sish","Jamoaviy hurmat"],"correct":0},{"q":"Nomoddiy motivatsiya nimani o'z ichiga oladi?","options":["E'tirof, hurmat va rivojlanish imkoniyatlarini","Faqat pul mukofotlarini","Faqat jazolarni","Faqat majburiyatlarni"],"correct":0},{"q":"Motivatsiya va qoniqish o'rtasidagi bog'liqlik qanday?","options":["Qoniqish motivatsiyani kuchaytiradi","Qoniqish motivatsiyaga ta'sir qilmaydi","Motivatsiya qoniqishni pasaytiradi","Ular o'zaro bog'liq emas"],"correct":0},{"q":"Adolatli rag'batlantirish tizimi nimani ta'minlaydi?","options":["Xodimlarda ishonch va sodiqlikni","Qarama-qarshilikni","Passivlikni","Norozilikni"],"correct":0},{"q":"Rahbarning motivatsiyadagi roli nimada?","options":["Xodimlarni ilhomlantirish va qo'llab-quvvatlashda","Faqat buyruq berishda","Faqat jazolashda","Faqat nazoratda"],"correct":0},{"q":"Maqsadga yo'naltirilgan motivatsiya nimani anglatadi?","options":["Aniq maqsadlar orqali xodimlarni rag'batlantirishni","Faqat umumiy topshiriqlarni","Faqat intizomiy choralarni","Faqat tashqi bosimni"],"correct":0},{"q":"Motivatsiya jarayonida kommunikatsiya nima uchun muhim?","options":["Maqsad va kutishlarni aniq tushuntirish uchun","Faqat hujjat topshirish uchun","Faqat rasmiy yozishmalar uchun","Faqat nazorat qilish uchun"],"correct":0},{"q":"Innovatsion muhit motivatsiyaga qanday ta'sir qiladi?","options":["Ijodkorlik va tashabbusni kuchaytiradi","Passivlikni oshiradi","Intizomni pasaytiradi","Nazoratni susaytiradi"],"correct":0},{"q":"Motivatsiya yetishmasligi nimaga olib keladi?","options":["Ish samaradorligining pasayishiga","Natijalar oshishiga","Innovatsiya kuchayishiga","Sodiqlik ortishiga"],"correct":0},{"q":"Individual yondashuv motivatsiyada nima uchun zarur?","options":["Xodimlarning ehtiyojlari turlicha bo'lgani uchun","Hamma xodim bir xil bo'lgani uchun","Faqat nazoratni kuchaytirish uchun","Faqat hujjatlar sababli"],"correct":0},{"q":"Jamoaviy motivatsiya nimani ta'minlaydi?","options":["Hamkorlik va umumiy natijaga intilishni","Shaxsiy raqobatni","Qarama-qarshilikni","Passivlikni"],"correct":0},{"q":"Samarali motivatsiya tizimi qanday bo'lishi kerak?","options":["Adolatli, shaffof va barqaror","Qat'iy va moslashuvsiz","Faqat moddiy","Faqat jazoga asoslangan"],"correct":0},{"q":"Zamonaviy tashkilotlarda motivatsiya nima uchun muhim?","options":["Inson resurslaridan maksimal samarali foydalanish uchun","Faqat nazoratni kuchaytirish uchun","Faqat hujjatlar sonini oshirish uchun","Faqat tashqi talablarni bajarish uchun"],"correct":0},{"q":"Karyera tushunchasi nimani anglatadi?","options":["Shaxsning mehnat faoliyati davomida kasbiy rivojlanish jarayonini","Faqat lavozim o'zgarishini","Faqat ish joyini almashtirishni","Faqat maosh oshishini"],"correct":0},{"q":"Karyera tashkiliy xulq-atvorning qaysi jihatini ifodalaydi?","options":["Xodimning uzoq muddatli kasbiy xatti-harakatini","Faqat kundalik vazifalarni","Faqat tashqi mehnat bozorini","Faqat tashkiliy tuzilmani"],"correct":0},{"q":"Karyera rejalashtirishning asosiy maqsadi nima?","options":["Xodim va tashkilot manfaatlarini uyg'unlashtirish","Faqat lavozimlarni qisqartirish","Faqat ish hajmini oshirish","Faqat nazoratni kuchaytirish"],"correct":0},{"q":"Individual karyera deganda nimani tushunamiz?","options":["Xodimning shaxsiy maqsad va ehtiyojlariga asoslangan rivojlanishini","Tashkilot strategiyasini","Jamoaviy qarorlarni","Rahbar topshiriqlarini"],"correct":0},{"q":"Tashkiliy karyera nimani ifodalaydi?","options":["Tashkilot doirasida kasbiy o'sish imkoniyatlarini","Faqat tashqi mehnat bozorini","Faqat vaqtinchalik ishlarni","Faqat rotatsiyani"],"correct":0},{"q":"Karyera rivojiga qaysi omillar ta'sir ko'rsatadi?","options":["Bilim, ko'nikma, motivatsiya va tajriba","Faqat yosh","Faqat lavozim","Faqat tashqi muhit"],"correct":0},{"q":"Karyera boshqaruvi nimani anglatadi?","options":["Xodimlarning kasbiy rivojini tizimli yo'naltirishni","Faqat lavozim nazoratini","Faqat jazolashni","Faqat hisobot yuritishni"],"correct":0},{"q":"Karyera rivojlanishida trening va ta'limning roli nimada?","options":["Kasbiy kompetensiyalarni oshirishda","Faqat vaqtni band qilishda","Faqat intizomni kuchaytirishda","Faqat rasmiylikni saqlashda"],"correct":0},{"q":"Karyera va motivatsiya o'rtasidagi bog'liqlik qanday?","options":["Karyera imkoniyatlari motivatsiyani kuchaytiradi","Ular o'zaro bog'liq emas","Motivatsiya karyerani cheklaydi","Karyera motivatsiyani pasaytiradi"],"correct":0},{"q":"Karyera rivojida rahbarning vazifasi nimadan iborat?","options":["Xodimlarni qo'llab-quvvatlash va yo'l-yo'riq ko'rsatishdan","Faqat buyruq berishdan","Faqat nazorat qilishdan","Faqat jazolashdan"],"correct":0},{"q":"Gorizontal karyera nimani anglatadi?","options":["Lavozim o'zgarmagan holda bilim va tajribaning kengayishini","Faqat lavozim oshishini","Faqat tashqi ish o'rinlarini","Faqat vaqtinchalik ishlarni"],"correct":0},{"q":"Vertikal karyera nimani ifodalaydi?","options":["Lavozim pog'onalarida yuqorilashni","Bilim almashinuvini","Jamoaviy ishni","Kasbiy qiziqishni"],"correct":0},{"q":"Karyera rivojlanishining bosqichlari nimani aks ettiradi?","options":["Kasbiy hayot davomidagi rivojlanish ketma-ketligini","Faqat yosh davrlarini","Faqat tashkiliy tuzilmani","Faqat ish jadvalini"],"correct":0},{"q":"Karyera rejalashtirishda o'z-o'zini baholash nima uchun muhim?","options":["Shaxsiy kuchli va zaif tomonlarni aniqlash uchun","Faqat rahbar talabini bajarish uchun","Faqat hujjat topshirish uchun","Faqat nazoratni kuchaytirish uchun"],"correct":0},{"q":"Karyera rivoji tashkilotga qanday foyda keltiradi?","options":["Malakali va sodiq xodimlar shakllanishiga","Xarajatlar oshishiga","Intizom pasayishiga","Qarama-qarshilik kuchayishiga"],"correct":0},{"q":"Karyera imkoniyatlarining cheklanishi nimaga olib keladi?","options":["Motivatsiya va sodiqlik pasayishiga","Samaradorlik oshishiga","Innovatsiya kuchayishiga","Natijalar ortishiga"],"correct":0},{"q":"Karyera rivojida mentoring nimani anglatadi?","options":["Tajribali xodim tomonidan yo'l-yo'riq ko'rsatishni","Faqat nazoratni","Faqat baholashni","Faqat jazolashni"],"correct":0},{"q":"Karyera boshqaruvida shaffoflik nima uchun muhim?","options":["Adolat va ishonchni ta'minlash uchun","Faqat rasmiylik uchun","Faqat hisobot uchun","Faqat nazorat uchun"],"correct":0},{"q":"Zamonaviy tashkilotlarda moslashuvchan karyera nimani anglatadi?","options":["Turli yo'nalishlarda rivojlanish imkoniyatini","Faqat bitta lavozimni","Faqat qat'iy tartibni","Faqat vaqtinchalik ishni"],"correct":0},{"q":"Karyera tashkiliy xulq-atvorning elementi sifatida nima uchun muhim?","options":["Xodimlar rivoji orqali tashkilot barqarorligini ta'minlagani uchun","Faqat hujjatlar sonini oshirgani uchun","Faqat nazoratni kuchaytirgani uchun","Faqat tashqi talablarni bajargani uchun"],"correct":0},{"q":"Menejerning xatti-harakati nimani ifodalaydi?","options":["Boshqaruv jarayonida uning qaror, munosabat va harakatlarini","Faqat buyruqlarini","Faqat nazoratni","Faqat hujjatlarni"],"correct":0},{"q":"Menejer xatti-harakatining asosiy maqsadi nima?","options":["Tashkilot maqsadlariga samarali erishishni ta'minlash","Faqat intizomni kuchaytirish","Faqat hisobot yuritish","Faqat resurslarni cheklash"],"correct":0},{"q":"Samarali menejer xatti-harakati nimaga asoslanadi?","options":["Professional bilim, tajriba va axloqiy tamoyillarga","Faqat shaxsiy manfaatga","Faqat qat'iy buyruqlarga","Faqat tashqi bosimga"],"correct":0},{"q":"Menejerning xodimlarga munosabati nimaga ta'sir qiladi?","options":["Jamoa muhiti va ish samaradorligiga","Faqat ish vaqtiga","Faqat texnik jarayonga","Faqat hujjatlar soniga"],"correct":0},{"q":"Demokratik xatti-harakatga ega menejer nimani qo'llab-quvvatlaydi?","options":["Jamoaning fikr va tashabbuslarini","Faqat buyruqbozlikni","Faqat nazoratni","Faqat rasmiylikni"],"correct":0},{"q":"Avtoritar menejer xatti-harakatining asosiy belgisi qaysi?","options":["Qat'iy buyruq va markazlashgan qaror qabul qilish","Jamoaviy muhokama","O'zaro ishonch","Moslashuvchanlik"],"correct":0},{"q":"Menejerning axloqiy xatti-harakati nimani ta'minlaydi?","options":["Ishonch va hurmatga asoslangan muhitni","Qarama-qarshilikni","Passivlikni","Norozilikni"],"correct":0},{"q":"Menejerning muloqot uslubi nimaga bevosita ta'sir qiladi?","options":["Xodimlar motivatsiyasi va tushunish darajasiga","Faqat hujjat aylanishiga","Faqat texnik jarayonga","Faqat tashqi muhitga"],"correct":0},{"q":"Vaziyatga mos xatti-harakat nimani anglatadi?","options":["Sharoitga qarab boshqaruv uslubini moslashtirishni","Faqat bitta uslubdan foydalanishni","Faqat qat'iy nazoratni","Faqat rasmiy munosabatni"],"correct":0},{"q":"Menejerning yetakchilik xatti-harakati nimada namoyon bo'ladi?","options":["Ilhomlantirish va yo'naltirishda","Faqat buyruq berishda","Faqat jazolashda","Faqat hisobot talab qilishda"],"correct":0},{"q":"Menejerning qaror qabul qilish xatti-harakati nimani talab qiladi?","options":["Mas'uliyat va tahliliy yondashuvni","Faqat tezkorlikni","Faqat shaxsiy fikrni","Faqat tajribani"],"correct":0},{"q":"Menejer xatti-harakatida adolat nimani anglatadi?","options":["Xodimlarga teng va xolis munosabatni","Faqat yuqoridan ko'rsatmalarni","Faqat jazolashni","Faqat moddiy rag'batni"],"correct":0},{"q":"Menejerning namuna bo'lishi nimaga olib keladi?","options":["Xodimlar xulqining ijobiy shakllanishiga","Intizom pasayishiga","Qarama-qarshilik kuchayishiga","Nazorat susayishiga"],"correct":0},{"q":"Stressli vaziyatda menejer xatti-harakati qanday bo'lishi kerak?","options":["Vazmin, muvozanatli va yechimga yo'naltirilgan","Keskin va shoshqaloq","Befarq","Haddan tashqari qat'iy"],"correct":0},{"q":"Menejerning delegatsiya qilish xatti-harakati nimani ta'minlaydi?","options":["Xodimlar mas'uliyati va rivojlanishini","Nazoratning kuchayishini","Ish sekinlashishini","Passivlikni"],"correct":0},{"q":"Menejerning motivatsion xatti-harakati nimani o'z ichiga oladi?","options":["Rag'batlantirish, qo'llab-quvvatlash va e'tirofni","Faqat jazolashni","Faqat buyruq berishni","Faqat nazoratni"],"correct":0},{"q":"Konstruktiv tanqid menejer xatti-harakatida nimani anglatadi?","options":["Yechimga yo'naltirilgan va hurmat bilan bildirilgan fikrni","Faqat salbiy bahoni","Faqat jamoat oldida tanqidni","Faqat jazoni"],"correct":0},{"q":"Menejerning moslashuvchan xatti-harakati nimaga yordam beradi?","options":["O'zgarishlarga tez moslashishga","Qat'iylikni oshirishga","Nazoratni susaytirishga","Intizomni pasaytirishga"],"correct":0},{"q":"Menejer xatti-harakatining samaradorligi nimaga bog'liq?","options":["Xodimlar ehtiyojlarini tushunish va hisobga olishga","Faqat lavozim vakolatiga","Faqat tajribaga","Faqat tashqi omillarga"],"correct":0},{"q":"Zamonaviy tashkilotlarda menejer xatti-harakati nima uchun muhim?","options":["Inson omili orqali barqaror natijalarga erishish uchun","Faqat hujjatlar sonini oshirish uchun","Faqat nazoratni kuchaytirish uchun","Faqat tashqi talablarni bajarish uchun"],"correct":0},{"q":"Boshqaruv ishini tashkil etish deganda nimani tushunamiz?","options":["Boshqaruv faoliyatini samarali rejalashtirish, muvofiqlashtirish va nazorat qilishni","Faqat buyruqlar berishni","Faqat hujjatlar yuritishni","Faqat nazoratni"],"correct":0},{"q":"Boshqaruv ishini tashkil etishning asosiy maqsadi nima?","options":["Tashkilot resurslaridan samarali foydalanishni ta'minlash","Faqat intizomni kuchaytirish","Faqat ish hajmini oshirish","Faqat hisobotlarni ko'paytirish"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda rejalashtirish nimani anglatadi?","options":["Maqsadlarni belgilash va ularga erishish yo'llarini aniqlashni","Faqat kundalik topshiriqlarni","Faqat nazorat choralarini","Faqat moliyaviy hisob-kitobni"],"correct":0},{"q":"Tashkil etish funksiyasi nimani o'z ichiga oladi?","options":["Vazifalarni taqsimlash va vakolatlarni belgilashni","Faqat buyruq berishni","Faqat hisobot tayyorlashni","Faqat tekshiruvni"],"correct":0},{"q":"Boshqaruv ishida muvofiqlashtirish nima uchun zarur?","options":["Bo'limlar va xodimlar faoliyatini uyg'unlashtirish uchun","Faqat nazoratni kuchaytirish uchun","Faqat intizomni ta'minlash uchun","Faqat rasmiylikni oshirish uchun"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda vaqtni boshqarish nimani ta'minlaydi?","options":["Ish unumdorligi va samaradorlikni oshirishni","Ish sekinlashishini","Ortiqcha yuklamani","Passivlikni"],"correct":0},{"q":"Boshqaruv mehnatini ratsional tashkil etish nimani anglatadi?","options":["Menejer vaqtini va kuchini optimal taqsimlashni","Faqat hujjat ko'paytirishni","Faqat majlislar sonini oshirishni","Faqat nazoratni kuchaytirishni"],"correct":0},{"q":"Vakolat va javobgarlik o'rtasidagi muvozanat nima uchun muhim?","options":["Samarali va mas'uliyatli boshqaruvni ta'minlash uchun","Faqat lavozimni mustahkamlash uchun","Faqat nazoratni oshirish uchun","Faqat rasmiylik uchun"],"correct":0},{"q":"Boshqaruv ishida delegatsiya nimani anglatadi?","options":["Vazifalarning bir qismini xodimlarga topshirishni","Faqat buyruq berishni","Faqat nazoratni","Faqat hisobot talab qilishni"],"correct":0},{"q":"Delegatsiyaning asosiy afzalligi nimada?","options":["Menejer yuklamasini kamaytirish va xodimlarni rivojlantirishda","Nazoratni yo'qotishda","Ish sekinlashishida","Mas'uliyat pasayishida"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda axborotning roli nimada?","options":["Qarorlarni asosli va tezkor qabul qilishda","Faqat hujjatlar sonini oshirishda","Faqat nazoratda","Faqat rasmiy yozishmalarda"],"correct":0},{"q":"Boshqaruv qarorlarini qabul qilish jarayoni nimani talab qiladi?","options":["Tahlil, muqobil variantlar va mas'uliyatni","Faqat tajribani","Faqat shaxsiy fikrni","Faqat tezkorlikni"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda nazoratning vazifasi nima?","options":["Rejalarning bajarilishini baholash va tuzatish kiritish","Faqat jazolash","Faqat hujjat tekshirish","Faqat rasmiy hisobot"],"correct":0},{"q":"Samarali boshqaruv ishining belgisi qaysi?","options":["Aniq vazifalar, tartib va natijaga yo'naltirilganlik","Qat'iy byurokratiya","Haddan tashqari nazorat","Moslashuvchanlikning yo'qligi"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda menejerning shaxsiy mas'uliyati nimada?","options":["Qabul qilingan qarorlar natijasiga javob berishda","Faqat buyruq berishda","Faqat hujjat imzolashda","Faqat nazoratda"],"correct":0},{"q":"Boshqaruv ishida standartlashtirish nimani ta'minlaydi?","options":["Jarayonlarning aniqligi va barqarorligini","Intizom pasayishiga","Moslashuvchanlikni yo'qotishni","Ish sekinlashishini"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda texnologiyalardan foydalanish nimaga xizmat qiladi?","options":["Axborot oqimini tezlashtirish va samaradorlikni oshirishga","Faqat nazoratni kuchaytirishga","Faqat rasmiylikni oshirishga","Faqat hisobot ko'paytirishga"],"correct":0},{"q":"Boshqaruv ishida mehnat taqsimoti nimani anglatadi?","options":["Vazifalarni mutaxassislik asosida taqsimlashni","Faqat lavozim oshirishni","Faqat nazoratni","Faqat intizomni"],"correct":0},{"q":"Boshqaruv ishini tashkil etishda motivatsiya nima uchun muhim?","options":["Xodimlarning faolligi va mas'uliyatini oshirish uchun","Faqat jazolash uchun","Faqat nazorat uchun","Faqat rasmiy talablar uchun"],"correct":0},{"q":"Zamonaviy tashkilotlarda boshqaruv ishini tashkil etish nima uchun muhim?","options":["Barqaror rivojlanish va yuqori natijalarga erishish uchun","Faqat hujjatlar sonini oshirish uchun","Faqat qat'iy nazorat uchun","Faqat tashqi talablarni bajarish uchun"],"correct":0},{"q":"Guruh tashkiliy etika sifatida nimani anglatadi?","options":["Guruh a'zolari o'rtasida shakllangan axloqiy me'yor va qoidalarni","Faqat rasmiy hujjatlarni","Faqat rahbar buyruqlarini","Faqat tashqi talablarni"],"correct":0},{"q":"Guruh etikasi tashkilotda nima uchun muhim?","options":["O'zaro hurmat va mas'uliyatli xulqni ta'minlagani uchun","Faqat nazoratni kuchaytirgani uchun","Faqat intizomni qat'iylashtirgani uchun","Faqat hujjatlar sonini oshirgani uchun"],"correct":0},{"q":"Guruh etikasi qaysi omillar asosida shakllanadi?","options":["Qadriyatlar, an'analar va umumiy me'yorlar asosida","Faqat shaxsiy manfaat asosida","Faqat tashqi bosim asosida","Faqat rasmiy qoidalar asosida"],"correct":0},{"q":"Guruhdagi axloqiy muhit nimaga ta'sir qiladi?","options":["Xodimlar xulqi va jamoa samaradorligiga","Faqat ish jadvaliga","Faqat texnik jarayonga","Faqat moliyaviy hisobotga"],"correct":0},{"q":"Guruh etikasi a'zolardan nimani talab qiladi?","options":["Halollik, hurmat va mas'uliyatni","Faqat bo'ysunishni","Faqat raqobatni","Faqat rasmiylikni"],"correct":0},{"q":"Guruh me'yorlari nimani ifodalaydi?","options":["Guruh ichida qabul qilingan xulq-atvor qoidalarini","Faqat tashqi qonunlarni","Faqat rahbar topshiriqlarini","Faqat yozma ko'rsatmalarni"],"correct":0},{"q":"Guruh etikasi buzilishi nimaga olib keladi?","options":["Nizo va ishonchsizlik kuchayishiga","Samaradorlik oshishiga","Hamkorlik kuchayishiga","Motivatsiya ortishiga"],"correct":0},{"q":"Guruhdagi o'zaro ishonch nimaga asoslanadi?","options":["Axloqiy me'yorlarga rioya qilinishiga","Faqat lavozimga","Faqat ish stajiga","Faqat tashqi nazoratga"],"correct":0},{"q":"Guruh etikasi va tashkilot madaniyati o'rtasidagi bog'liqlik qanday?","options":["Guruh etikasi madaniyatning muhim tarkibiy qismi hisoblanadi","Ular bir-biriga bog'liq emas","Guruh etikasi madaniyatga zid","Madaniyat guruhga ta'sir qilmaydi"],"correct":0},{"q":"Guruh yetakchisining etikadagi roli nimada?","options":["Axloqiy me'yorlarga shaxsiy namuna ko'rsatishda","Faqat nazorat qilishda","Faqat hisobot talab qilishda","Faqat buyruq berishda"],"correct":0},{"q":"Guruhda adolat tamoyili nimani ta'minlaydi?","options":["Teng munosabat va ishonchni","Qarama-qarshilikni","Passivlikni","Norozilikni"],"correct":0},{"q":"Guruh etikasi jamoaviy qarorlarga qanday ta'sir qiladi?","options":["Mas'uliyatli va asosli qarorlar qabul qilinishiga","Qarorlarni sekinlashtirishga","Qarama-qarshilikni kuchaytirishga","Nazoratni susaytirishga"],"correct":0},{"q":"Guruhdagi axloqiy qadriyatlar nimani mustahkamlaydi?","options":["Jamoaviy birdamlik va sodiqlikni","Individualizmni","Raqobatni","Passivlikni"],"correct":0},{"q":"Guruh etikasi va muloqot o'rtasidagi bog'liqlik nimada?","options":["Axloqiy muloqot sog'lom guruh muhitini yaratadi","Muloqot etikaga ta'sir qilmaydi","Etika muloqotni cheklaydi","Muloqot faqat rasmiy bo'ladi"],"correct":0},{"q":"Guruh etikasi xodimlarning motivatsiyasiga qanday ta'sir qiladi?","options":["Ijobiy muhit orqali motivatsiyani oshiradi","Motivatsiyani pasaytiradi","Ta'sir qilmaydi","Faqat jazolashni kuchaytiradi"],"correct":0},{"q":"Guruhda mas'uliyat hissi nimaga bog'liq?","options":["Umumiy axloqiy me'yorlarga amal qilinishiga","Faqat lavozimga","Faqat nazoratga","Faqat ish vaqtiga"],"correct":0},{"q":"Guruh etikasi nizolarni boshqarishda qanday rol o'ynaydi?","options":["Nizolarni konstruktiv hal etishga yordam beradi","Nizolarni kuchaytiradi","Nizolarni e'tiborsiz qoldiradi","Nizolarni yashiradi"],"correct":0},{"q":"Guruh etikasi tashkilot samaradorligiga qanday ta'sir qiladi?","options":["Hamkorlik va natijadorlikni oshiradi","Ish sekinlashishiga olib keladi","Intizom pasayishiga olib keladi","Nazoratni susaytiradi"],"correct":0},{"q":"Guruh etikasi barqaror bo'lishi uchun nima zarur?","options":["Qadriyatlar, ochiq muloqot va rahbar namunasini","Faqat jazolash tizimini","Faqat qat'iy qoidalarni","Faqat tashqi bosimni"],"correct":0},{"q":"Guruh tashkiliy etika sifatida nima uchun muhim?","options":["Sog'lom jamoa muhiti va barqaror rivojlanishni ta'minlagani uchun","Faqat rasmiy talablarni bajarish uchun","Faqat hujjatlar sonini oshirish uchun","Faqat nazoratni kuchaytirish uchun"],"correct":0},{"q":"Tashkilotdagi nizo deganda nimani tushunamiz?","options":["Xodimlar yoki guruhlar o'rtasidagi manfaat va fikrlar to'qnashuvini","Faqat shaxsiy kelishmovchilikni","Faqat tashqi bosimni","Faqat hujjatlar muammosini"],"correct":0},{"q":"Nizolarning paydo bo'lishiga asosiy sabab nima bo'lishi mumkin?","options":["Manfaatlar, resurslar yoki maqsadlar farqi","Faqat texnik nosozlik","Faqat ish vaqti","Faqat tashqi muhit"],"correct":0},{"q":"Konstruktiv nizo nimani anglatadi?","options":["Muammoni hal qilish va rivojlanishga xizmat qiluvchi nizo","Faqat buyruq berishda","Faqat hujjat imzolashda","Faqat nazoratda"],"correct":0},{"q":"Destruktiv nizo nimaga olib keladi?","options":["Ish samaradorligi va munosabatlar yomonlashuviga","Innovatsiya kuchayishiga","Hamkorlik oshishiga","Motivatsiya ortishiga"],"correct":0},{"q":"Nizolarni boshqarishning asosiy maqsadi nima?","options":["Nizoni samarali hal qilish va salbiy ta'sirni kamaytirish","Nizoni kuchaytirish","Nizoni yashirish","Nizoni e'tiborsiz qoldirish"],"correct":0},{"q":"Muzokara nizolarni hal etishda nimani ta'minlaydi?","options":["O'zaro maqbul kelishuvga erishishni","Faqat g'alabani","Faqat bosimni","Faqat jazoni"],"correct":0},{"q":"Kompromiss usuli nimani anglatadi?","options":["Tomonlarning o'zaro yon berishi orqali kelishuvni","Faqat bir tomon g'alabasini","Faqat nizoni cho'zishni","Faqat qarama-qarshilikni"],"correct":0},{"q":"Stress tushunchasi nimani ifodalaydi?","options":["Insonning bosim va talablar ta'siriga bo'lgan psixologik reaksiyasini","Faqat jismoniy charchoqni","Faqat tashqi muhitni","Faqat ish hajmini"],"correct":0},{"q":"Ish joyidagi stressning asosiy manbalari qaysilar?","options":["Ortiqcha yuklama, vaqt bosimi va noaniqlik","Faqat ish joyi manzili","Faqat texnik vositalar","Faqat tashqi talablar"],"correct":0},{"q":"Uzoq davom etuvchi stress nimaga olib kelishi mumkin?","options":["Salomatlik va ish samaradorligining pasayishiga","Motivatsiya oshishiga","Innovatsiya kuchayishiga","Hamkorlik kuchayishiga"],"correct":0},{"q":"Stressni boshqarish nimani anglatadi?","options":["Stress manbalarini aniqlash va ularni kamaytirish choralarini","Stressni butunlay inkor etishni","Stressni kuchaytirishni","Stressni yashirishni"],"correct":0},{"q":"Rahbarning nizolarni boshqarishdagi roli nimada?","options":["Adolatli va konstruktiv yechim topishda","Faqat buyruq berishda","Faqat jazolashda","Faqat nazoratda"],"correct":0},{"q":"Rahbar stressni kamaytirish uchun nima qilishi mumkin?","options":["Qo'llab-quvvatlash va aniq vazifalar berish","Bosimni oshirish","Nazoratni kuchaytirish","Talablarni noaniq qilish"],"correct":0},{"q":"Nizolar va stresslar o'rtasidagi bog'liqlik qanday?","options":["Nizolar stressni kuchaytirishi mumkin","Ular bog'liq emas","Stress nizoni kamaytiradi","Nizo stressga ta'sir qilmaydi"],"correct":0},{"q":"Jamoada ochiq muloqot nimaga yordam beradi?","options":["Nizolarni oldini olish va stressni kamaytirishga","Qarama-qarshilikni kuchaytirishga","Nazoratni susaytirishga","Intizomni pasaytirishga"],"correct":0},{"q":"Individual stressga qarshi kurash usullariga nimalar kiradi?","options":["Vaqtni boshqarish va dam olishni rejalashtirish","Ish hajmini oshirish","Dam olmaslik","Bosimni kuchaytirish"],"correct":0},{"q":"Tashkilot darajasida stressni kamaytirish nimani talab qiladi?","options":["Sog'lom ish muhiti va adolatli tizimni","Faqat jazolashni","Faqat qat'iy nazoratni","Faqat rasmiy talablarni"],"correct":0},{"q":"Nizolarni hal etishda hamkorlik usuli nimani anglatadi?","options":["Har ikki tomon manfaatini hisobga olgan yechimni","Faqat bir tomon manfaatini","Faqat nizoni cho'zishni","Faqat bosimni"],"correct":0},{"q":"Stress va nizolarni boshqarish tashkilotga qanday foyda keltiradi?","options":["Barqarorlik va yuqori samaradorlikni","Ish sekinlashishini","Qarama-qarshilik kuchayishini","Motivatsiya pasayishini"],"correct":0},{"q":"Zamonaviy tashkilotlarda nizolar va stresslarni boshqarish nima uchun muhim?","options":["Inson resurslarini saqlash va samarali ishlatish uchun","Faqat rasmiy tartibni saqlash uchun","Faqat hujjatlar sonini oshirish uchun","Faqat tashqi talablarni bajarish uchun"],"correct":0}];
+
+const BLOCK_SIZE = 25;
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+let shuffledAll = [];
+let blockIndex = 0;
+let currentBlock = [];
+let currentQ = 0;
+let blockCorrect = 0;
+let blockWrong = 0;
+let totalCorrect = 0;
+let totalWrong = 0;
+let answered = false;
+let usedInBlock = new Set();
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  shuffledAll = shuffle([...Array(ALL_QUESTIONS.length).keys()]);
+  blockIndex = 0;
+  totalCorrect = 0;
+  totalWrong = 0;
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadBlock();
+}
+
+function loadBlock() {
+  const start = blockIndex * BLOCK_SIZE;
+  const end = Math.min(start + BLOCK_SIZE, shuffledAll.length);
+  currentBlock = shuffledAll.slice(start, end).map(i => {
+    const q = ALL_QUESTIONS[i];
+    // Shuffle options but track correct answer
+    const opts = q.options.map((o, idx) => ({ text: o, isCorrect: idx === q.correct }));
+    const shuffledOpts = shuffle(opts);
+    const newCorrect = shuffledOpts.findIndex(o => o.isCorrect);
+    return { q: q.q, options: shuffledOpts.map(o => o.text), correct: newCorrect };
+  });
+  currentQ = 0;
+  blockCorrect = 0;
+  blockWrong = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const totalBlocks = Math.ceil(ALL_QUESTIONS.length / BLOCK_SIZE);
+  const q = currentBlock[currentQ];
+  const globalQ = blockIndex * BLOCK_SIZE + currentQ + 1;
+  const pct = ((currentQ) / currentBlock.length) * 100;
+
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('prog-left').textContent = `Savol ${currentQ + 1} / ${currentBlock.length}`;
+  document.getElementById('prog-right').textContent = `Blok ${blockIndex + 1} / ${totalBlocks}`;
+  document.getElementById('q-num').textContent = `Savol #${globalQ}`;
+  document.getElementById('score-badge').innerHTML = `✅ ${blockCorrect} &nbsp; ❌ ${blockWrong}`;
+  document.getElementById('question-text').textContent = q.q;
+  document.getElementById('feedback-msg').textContent = '';
+  document.getElementById('feedback-msg').className = '';
+  document.getElementById('next-btn').style.display = 'none';
+
+  const wrap = document.getElementById('options-wrap');
+  wrap.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-label">${LETTERS[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i, btn);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx, btn) {
+  if (answered) return;
+  answered = true;
+  const q = currentBlock[currentQ];
+  const isCorrect = idx === q.correct;
+  const allBtns = document.querySelectorAll('.option-btn');
+
+  allBtns.forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    blockCorrect++;
+    totalCorrect++;
+    const fb = document.getElementById('feedback-msg');
+    fb.textContent = '✅ To\'g\'ri!';
+    fb.className = 'correct';
+  } else {
+    btn.classList.add('wrong');
+    allBtns[q.correct].classList.add('reveal-correct');
+    blockWrong++;
+    totalWrong++;
+    const fb = document.getElementById('feedback-msg');
+    fb.textContent = '❌ Noto\'g\'ri!';
+    fb.className = 'wrong';
+  }
+
+  document.getElementById('score-badge').innerHTML = `✅ ${blockCorrect} &nbsp; ❌ ${blockWrong}`;
+  document.getElementById('next-btn').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= currentBlock.length) {
+    showBlockResults();
+  } else {
+    showQuestion();
+  }
+}
+
+function showBlockResults() {
+  const totalBlocks = Math.ceil(ALL_QUESTIONS.length / BLOCK_SIZE);
+  const pct = Math.round((blockCorrect / currentBlock.length) * 100);
+  const isLast = (blockIndex + 1) >= totalBlocks;
+
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+
+  // Score circle
+  const circle = document.getElementById('score-circle');
+  const deg = (pct / 100) * 360;
+  circle.style.background = `conic-gradient(${pct >= 60 ? '#22c55e' : '#ef4444'} ${deg}deg, #2a2d45 ${deg}deg)`;
+  document.getElementById('score-pct').textContent = pct + '%';
+
+  document.getElementById('r-correct').textContent = blockCorrect;
+  document.getElementById('r-wrong').textContent = blockWrong;
+  document.getElementById('r-total').textContent = currentBlock.length;
+
+  if (isLast) {
+    document.getElementById('res-title').textContent = '🎓 Barcha savollar yakunlandi!';
+    const totPct = Math.round((totalCorrect / ALL_QUESTIONS.length) * 100);
+    let emoji = totPct >= 80 ? '🏆' : totPct >= 60 ? '👍' : '📚';
+    document.getElementById('res-emoji').textContent = emoji;
+    document.getElementById('res-msg').innerHTML = `Umumiy natija: <strong>${totalCorrect} / ${ALL_QUESTIONS.length}</strong> (${totPct}%)<br>${totPct >= 80 ? 'Ajoyib natija! Siz fanini yaxshi o\'zlashtirgansiz.' : totPct >= 60 ? 'Yaxshi! Bir oz ko\'proq o\'rganing.' : 'Ko\'proq mashq qiling, boshidan boshlang!'}`;
+    document.getElementById('continue-btn').style.display = 'none';
+  } else {
+    let emoji = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪';
+    document.getElementById('res-emoji').textContent = emoji;
+    document.getElementById('res-title').textContent = `Blok ${blockIndex + 1} yakunlandi!`;
+    document.getElementById('res-msg').innerHTML = `${pct >= 80 ? 'Zo\'r natija!' : pct >= 60 ? 'Yaxshi!' : 'Keyingisida yaxshiroq!'} Keyingi blokda ${Math.min(BLOCK_SIZE, ALL_QUESTIONS.length - (blockIndex + 1) * BLOCK_SIZE)} ta savol bor.`;
+    document.getElementById('continue-btn').style.display = 'inline-block';
+  }
+}
+
+function continueQuiz() {
+  blockIndex++;
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  loadBlock();
+}
+
+function restartQuiz() {
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'block';
+}
+</script>
+</body>
+</html>
